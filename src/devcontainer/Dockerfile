@@ -13,10 +13,6 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN set -eux; \
-    groupadd -g 1000 node; \
-    useradd -m -d "${HOME_DIR}" -u 1000 -g 1000 -s /bin/sh node
-
 RUN curl -fsSL https://install.determinate.systems/nix | sh -s -- install linux --no-confirm --init none \
     --extra-conf "experimental-features = nix-command flakes" \
     --extra-conf "sandbox = false" \
@@ -25,7 +21,7 @@ RUN curl -fsSL https://install.determinate.systems/nix | sh -s -- install linux 
 
 ENV PATH=/nix/var/nix/profiles/default/bin:/nix/var/nix/profiles/default/sbin:$PATH
 
-COPY docker/flake.nix docker/flake.lock /tmp/flake/
+COPY devcontainer/flake.nix devcontainer/flake.lock /tmp/flake/
 RUN nix profile install --profile /nix/var/nix/profiles/default /tmp/flake#devtools \
     && rm -rf /tmp/flake
 
@@ -79,6 +75,10 @@ ARG TARGETARCH
 
 ARG HOME_DIR
 
+RUN set -eux; \
+    groupadd -g 1000 node; \
+    useradd -m -d "${HOME_DIR}" -u 1000 -g 1000 -s /bin/sh node
+
 RUN mkdir -p ${HOME_DIR}/workspace \
     ${HOME_DIR}/.config/gcloud \
     ${HOME_DIR}/.config/nvim \
@@ -106,8 +106,8 @@ FROM setup-tools AS final
 
 USER root
 
-COPY docker/supervisord.conf /etc/supervisor/supervisord.conf
-COPY scripts/devcontainer-init.sh /usr/local/bin/devcontainer-init.sh
+COPY devcontainer/supervisord.conf /etc/supervisor/supervisord.conf
+COPY devcontainer/devcontainer-init.sh /usr/local/bin/devcontainer-init.sh
 RUN chmod 0755 /usr/local/bin/devcontainer-init.sh
 
 ENTRYPOINT ["/usr/local/bin/devcontainer-init.sh"]
