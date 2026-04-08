@@ -106,8 +106,8 @@ FROM setup-tools AS final
 
 USER root
 
-COPY docker/supervisord.conf /etc/supervisor/supervisord.conf
-COPY scripts/devcontainer-init.sh /usr/local/bin/devcontainer-init.sh
+COPY devcontainer/supervisord.conf /etc/supervisor/supervisord.conf
+COPY devcontainer/devcontainer-init.sh /usr/local/bin/devcontainer-init.sh
 RUN chmod 0755 /usr/local/bin/devcontainer-init.sh
 
 ENTRYPOINT ["/usr/local/bin/devcontainer-init.sh"]
