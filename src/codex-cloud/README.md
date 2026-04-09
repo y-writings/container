@@ -55,11 +55,28 @@
 5. **監査容易性**
    - 変更履歴を追跡したい構成・手順はコード化して PR でレビューする。
 
-## 4) セットアップ実行手順
+## 4) セットアップ実行コマンド
+
+### A. リポジトリを clone 済みの場合
 
 ```bash
+# リポジトリルートで実行
 bash src/codex-cloud/setup.sh
 ```
+
+### B. `curl` でスクリプト取得してそのまま実行する場合
+
+```bash
+# 例: main ブランチの setup.sh を直接取得して実行
+# - RAW_SETUP_SH_URL: setup.sh の Raw URL
+# - GIT_REPO_URL: flake.nix を含む対象 Git リポジトリ URL
+curl -fsSL "<RAW_SETUP_SH_URL>" | bash -s -- --repo "<GIT_REPO_URL>" --ref "main"
+```
+
+> 注意:
+>
+> - `curl | bash` は URL の信頼性を必ず確認してください。
+> - `--repo` で指定したリポジトリを一時ディレクトリへ clone し、`src/codex-cloud/flake.nix` を使ってセットアップします。
 
 `setup.sh` は以下を順番に実行します。
 
@@ -69,4 +86,3 @@ bash src/codex-cloud/setup.sh
 4. `src/codex-cloud/` 配下の実行可能ファイルをファイル名昇順で実行
    - `setup.sh` 自身は除外
    - 想定例: `10-*.sh` → `20-*.sh` の順で段階実行
-

@@ -6,14 +6,16 @@
 #   - flake から devtools をインストール
 #   - src/codex-cloud 配下の追加実行ファイルを順次実行
 #
-# Usage:
+# Usage (repo 内で実行):
 #   bash src/codex-cloud/setup.sh
+#
+# Usage (curl から直接実行):
+#   curl -fsSL <RAW_SETUP_SH_URL> | bash -s -- --repo <GIT_REPO_URL> [--ref <branch-or-tag>]
 #
 # Preconditions:
 #   - Ubuntu 系 OS
 #   - sudo 権限
 #   - インターネット接続
-#   - リポジトリルートで実行されること
 
 set -euo pipefail
 
@@ -25,13 +27,74 @@ log_warn() {
   echo "[WARN] $*"
 }
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+log_error() {
+  echo "[ERROR] $*" >&2
+}
+
+REPO_URL=""
+REPO_REF="main"
+BOOTSTRAP_CLONE_DIR=""
+
+parse_args() {
+  while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+      --repo)
+        REPO_URL="${2:-}"
+        shift 2
+        ;;
+      --ref)
+        REPO_REF="${2:-}"
+        shift 2
+        ;;
+      -h|--help)
+        cat <<'USAGE'
+Usage:
+  bash src/codex-cloud/setup.sh
+  curl -fsSL <RAW_SETUP_SH_URL> | bash -s -- --repo <GIT_REPO_URL> [--ref <branch-or-tag>]
+USAGE
+        exit 0
+        ;;
+      *)
+        log_error "不明な引数: $1"
+        exit 1
+        ;;
+    esac
+  done
+}
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 CODEX_CLOUD_DIR="${REPO_ROOT}/src/codex-cloud"
 
-if [[ ! -f "${CODEX_CLOUD_DIR}/flake.nix" ]]; then
-  echo "[ERROR] flake.nix が見つかりません: ${CODEX_CLOUD_DIR}/flake.nix" >&2
-  exit 1
-fi
+cleanup() {
+  if [[ -n "${BOOTSTRAP_CLONE_DIR}" && -d "${BOOTSTRAP_CLONE_DIR}" ]]; then
+    rm -rf "${BOOTSTRAP_CLONE_DIR}"
+  fi
+}
+trap cleanup EXIT
+
+ensure_repo_context() {
+  if [[ -f "${CODEX_CLOUD_DIR}/flake.nix" ]]; then
+    return
+  fi
+
+  if [[ -z "${REPO_URL}" ]]; then
+    log_error "flake.nix が見つかりません。curl 実行時は --repo <GIT_REPO_URL> を指定してください"
+    exit 1
+  fi
+
+  log_info "リポジトリ外実行を検出しました。指定リポジトリを一時ディレクトリへ取得します"
+  BOOTSTRAP_CLONE_DIR="$(mktemp -d)"
+  git clone --depth 1 --branch "${REPO_REF}" "${REPO_URL}" "${BOOTSTRAP_CLONE_DIR}/repo"
+
+  REPO_ROOT="${BOOTSTRAP_CLONE_DIR}/repo"
+  CODEX_CLOUD_DIR="${REPO_ROOT}/src/codex-cloud"
+
+  if [[ ! -f "${CODEX_CLOUD_DIR}/flake.nix" ]]; then
+    log_error "取得したリポジトリに src/codex-cloud/flake.nix がありません"
+    exit 1
+  fi
+}
 
 install_apt_packages() {
   log_info "Step 1/4: apt ベースパッケージを確認します"
@@ -75,7 +138,6 @@ ensure_nix() {
   curl --proto '=https' --tlsv1.2 -fsSL https://install.determinate.systems/nix \
     | sh -s -- install --no-confirm
 
-  # installer が shell profile を更新するため、現在のシェルにも反映を試みる
   if [[ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
     # shellcheck source=/dev/null
     source /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
@@ -96,7 +158,7 @@ setup_flake_env() {
   cd "${CODEX_CLOUD_DIR}"
 
   if ! nix --extra-experimental-features "nix-command flakes" flake metadata . >/dev/null; then
-    echo "[ERROR] flake metadata の取得に失敗しました" >&2
+    log_error "flake metadata の取得に失敗しました"
     exit 1
   fi
 
@@ -127,6 +189,9 @@ run_local_executables() {
 }
 
 main() {
+  parse_args "$@"
+  ensure_repo_context
+
   log_info "Codex Cloud セットアップを開始します"
   install_apt_packages
   ensure_nix
