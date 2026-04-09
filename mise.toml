@@ -11,3 +11,11 @@ run = ["pinact run --check --fix", "dockerfile-pin run --write"]
 [tasks.scan]
 description = "Scan all repository files with betterleaks"
 run = ["betterleaks dir --no-banner --redact=20 ."]
+
+
+[tasks.flake-lock-update]
+description = "Update flake.lock for devcontainer and codex-cloud"
+run = [
+  "cd src/devcontainer && nix flake update",
+  "cd src/codex-cloud && nix flake update",
+]
