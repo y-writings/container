@@ -15,7 +15,11 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = import nixpkgs { inherit system; };
+        lib = nixpkgs.lib;
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfreePredicate = pkg: lib.getName pkg == "terraform";
+        };
 
         supported = system == "x86_64-linux";
 
