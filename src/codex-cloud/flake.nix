@@ -50,6 +50,7 @@
                   pkgs.nodePackages.bash-language-server
                   pkgs.biome
                   pkgs.tombi
+                  pkgs.terraform
                   pkgs.nodePackages.typescript
                   pkgs.nodePackages.typescript-language-server
                   pkgs.yaml-language-server
