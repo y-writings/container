@@ -67,10 +67,9 @@ bash src/codex-cloud/setup.sh
 ### B. `curl` でスクリプト取得してそのまま実行する場合
 
 ```bash
-# 例: main ブランチの setup.sh を直接取得して実行
-# - RAW_SETUP_SH_URL: setup.sh の Raw URL
-# - GIT_REPO_URL: flake.nix を含む対象 Git リポジトリ URL
-curl -fsSL "<RAW_SETUP_SH_URL>" | bash -s -- --repo "<GIT_REPO_URL>" --ref "main"
+# 例: https://github.com/y-writings/container の main ブランチから setup.sh を直接取得して実行
+curl -fsSL "https://raw.githubusercontent.com/y-writings/container/main/src/codex-cloud/setup.sh" \
+  | bash -s -- --repo "https://github.com/y-writings/container" --ref "main"
 ```
 
 > 注意:
