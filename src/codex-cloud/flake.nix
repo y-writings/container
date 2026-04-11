@@ -23,8 +23,6 @@
 
         supported = system == "x86_64-linux";
 
-        supervisorPkg = pkgs.supervisor or pkgs.python3Packages.supervisor;
-
       in
       {
         packages =
@@ -36,31 +34,13 @@
                 name = "devtools";
                 pathsToLink = [ "/bin" ];
                 paths = [
-                  pkgs.bash
-                  pkgs.git
-                  pkgs.zsh
-                  pkgs.ripgrep
-                  pkgs.gh
-                  pkgs.unzip
-                  pkgs.socat
-                  supervisorPkg
-                  pkgs.acl
-                  pkgs.curl
-                  pkgs.cacert
-                  pkgs.neovim
-                  pkgs.mise
-                  pkgs.opencode
                   pkgs.markdown-oxide
                   pkgs.nodePackages.bash-language-server
                   pkgs.biome
                   pkgs.tombi
                   pkgs.terraform
-                  pkgs.nodePackages.typescript
                   pkgs.nodePackages.typescript-language-server
                   pkgs.yaml-language-server
-
-                  pkgs.docker-client
-                  pkgs.docker-compose
                 ];
               };
             };
