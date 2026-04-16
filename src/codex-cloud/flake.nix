@@ -35,12 +35,12 @@
                 pathsToLink = [ "/bin" ];
                 paths = [
                   pkgs.markdown-oxide
-                  pkgs.nodePackages.bash-language-server
+                  pkgs.bash-language-server
                   pkgs.biome
                   pkgs.tombi
                   pkgs.terraform
-                  pkgs.nodePackages.typescript
-                  pkgs.nodePackages.typescript-language-server
+                  pkgs.typescript
+                  pkgs.typescript-language-server
                   pkgs.yaml-language-server
                 ];
               };
